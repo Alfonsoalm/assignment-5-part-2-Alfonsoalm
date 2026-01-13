@@ -1,4 +1,7 @@
 
+
+source "package/aesdf-assignments/Config.in"
+
 config BR2_PACKAGE_AESD_ASSIGNMENTS
 	bool "aesd-assignments"
 	help
