@@ -8,7 +8,7 @@ AESD_ASSIGNMENTS_VERSION = c71b0e387c6f51b8b25a71310c6d78bb04002457
 # Note: Be sure to reference the *ssh* repository URL here (not https) to work properly
 # with ssh keys and the automated build/test system.
 # Your site should start with git@github.com:
-AESD_ASSIGNMENTS_SITE = https://github.com/Alfonsoalm/assignment-3-part-1-Alfonsoalm.git
+AESD_ASSIGNMENTS_SITE = 'git@github.com:Alfonsoalm/assignment-3-part-1-Alfonsoalm.git'
 AESD_ASSIGNMENTS_SITE_METHOD = git
 AESD_ASSIGNMENTS_GIT_SUBMODULES = YES # Include submodules in the build
 
@@ -20,16 +20,16 @@ endef
 # TODO add your writer, finder and finder-test utilities/scripts to the installation steps below
 
 define AESD_ASSIGNMENTS_INSTALL_TARGET_CMDS
-    # Crear directorio de configuración
-    $(INSTALL) -d 0755 $(TARGET_DIR)/etc/finder-app/conf/
-    $(INSTALL) -m 0644 $(@D)/conf/* $(TARGET_DIR)/etc/finder-app/conf/
+	# 1. Instalamos los ejecutables en /usr/bin (esto es lo que el autotest espera)
+	$(INSTALL) -m 0755 $(@D)/finder-app/writer $(TARGET_DIR)/usr/bin/
+	$(INSTALL) -m 0755 $(@D)/finder-app/finder.sh $(TARGET_DIR)/usr/bin/
+	$(INSTALL) -m 0755 $(@D)/finder-app/finder-test.sh $(TARGET_DIR)/usr/bin/
+	$(INSTALL) -d $(TARGET_DIR)/usr/bin/conf/
+	$(INSTALL) -m 0644 $(@D)/conf/* $(TARGET_DIR)/usr/bin/conf/
 
-    # Instalar scripts en /usr/bin
-    $(INSTALL) -m 0755 $(@D)/finder-app/finder-test.sh $(TARGET_DIR)/usr/bin/
-    $(INSTALL) -m 0755 $(@D)/finder-app/finder.sh $(TARGET_DIR)/usr/bin/
-
-    # Instalar binario writer compilado
-    $(INSTALL) -m 0755 $(@D)/finder-app/writer $(TARGET_DIR)/usr/bin/
+	# 2. Copiamos TODO a /root de forma que no falle
+	$(INSTALL) -d $(TARGET_DIR)/root/
+	cp -rn $(@D)/* $(TARGET_DIR)/root/
 endef
 
 $(eval $(generic-package))
