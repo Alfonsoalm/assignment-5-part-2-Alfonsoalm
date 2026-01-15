@@ -17,12 +17,19 @@ jobs:
           - uses: webfactory/ssh-agent@v0.5.3
             with:
                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          - name: Verify SSH identities
+            run: |
+            ssh-add -l
+            ls -la ~/.ssh || true
           - name: Fix GitHub known_hosts issue
             run: |
               mkdir -p ~/.ssh
               ssh-keygen -R github.com || true
               ssh-keyscan github.com >> ~/.ssh/known_hosts
               chmod 644 ~/.ssh/known_hosts
+          - name: Export SSH settings for nested git (Buildroot)
+            run: |
+              echo 'export GIT_SSH_COMMAND="ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"' >> $GITHUB_EN
           - name: Run full test
             env:
               GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
