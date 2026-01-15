@@ -19,8 +19,8 @@ jobs:
                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           - name: Verify SSH identities
             run: |
-            ssh-add -l
-            ls -la ~/.ssh || true
+              ssh-add -l
+              ls -la ~/.ssh || true
           - name: Fix GitHub known_hosts issue
             run: |
               mkdir -p ~/.ssh
