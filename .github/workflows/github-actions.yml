@@ -53,17 +53,22 @@ jobs:
               GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -vvv"
             run: ssh -T git@github.com || true
 
+          - name: Reset QEMU host key cache inside container
+            run: |
+              mkdir -p /root/.ssh /github/home/.ssh
+              touch /root/.ssh/known_hosts /github/home/.ssh/known_hosts
+
+              ssh-keygen -f "/root/.ssh/known_hosts" -R "[localhost]:10022" || true
+              ssh-keygen -f "/github/home/.ssh/known_hosts" -R "[localhost]:10022" || true
+
+              # (Opcional) Si quieres ser agresivo:
+              # rm -f /root/.ssh/known_hosts /github/home/.ssh/known_hosts
+              # touch /root/.ssh/known_hosts /github/home/.ssh/known_hosts
 
           - name: Run full test
             env:
               SSH_AUTH_SOCK: /tmp/ssh-sock/agent.sock
               GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-            run: ./full-test.sh
-
-          - name: Run full test
-            env:
-              SSH_AUTH_SOCK: /tmp/ssh-sock/agent.sock
-              GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes"
             run: ./full-test.sh
 
           - name: Cleanup
