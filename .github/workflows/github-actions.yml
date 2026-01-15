@@ -40,6 +40,13 @@ jobs:
               ssh-keyscan github.com >> /root/.ssh/known_hosts
               chmod 644 /root/.ssh/known_hosts
 
+          - name: Verify SSH key inside container
+            env:
+              SSH_AUTH_SOCK: /tmp/ssh-sock/agent.sock
+            run: |
+              echo "SSH keys loaded:"
+              ssh-add -l || echo "No SSH keys loaded in agent!"
+
           - name: Run full test
             env:
               SSH_AUTH_SOCK: /tmp/ssh-sock/agent.sock
