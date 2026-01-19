@@ -22,55 +22,22 @@ jobs:
           - name: Checkout submodules
             run: git submodule update --init --recursive
 
-          - uses: webfactory/ssh-agent@v0.5.3
-            with:
-              ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-          - name: Prepare SSH socket for container
-            run: |
-              mkdir -p /tmp/ssh-sock
-              ln -sf $SSH_AUTH_SOCK /tmp/ssh-sock/agent.sock
-              echo "SSH_AUTH_SOCK=/tmp/ssh-sock/agent.sock" >> $GITHUB_ENV
-
-          # ⚠️ AHORA SÍ: este comando corre DENTRO DEL CONTENEDOR
-          - name: Fix known_hosts inside container
+          - name: Setup SSH key
             run: |
               mkdir -p /root/.ssh
-              rm -f /root/.ssh/known_hosts
-              ssh-keyscan github.com >> /root/.ssh/known_hosts
+              echo "${{ secrets.SSH_PRIVATE_KEY }}" > /root/.ssh/id_ed25519
+              chmod 600 /root/.ssh/id_ed25519
+              ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null || true
+              echo "SSH key configured"
+
+          - name: Fix known_hosts inside container
+            run: |
+              ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null || true
               chmod 644 /root/.ssh/known_hosts
 
-          - name: Verify SSH key inside container
-            env:
-              SSH_AUTH_SOCK: /tmp/ssh-sock/agent.sock
-            run: |
-              echo "SSH keys loaded:"
-              ssh-add -l || echo "No SSH keys loaded in agent!"
-            
-          - name: Test GitHub SSH auth
-            env:
-              SSH_AUTH_SOCK: /tmp/ssh-sock/agent.sock
-              GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -vvv"
-            run: ssh -T git@github.com || true
-
-          - name: Reset QEMU host key cache inside container
-            run: |
-              mkdir -p /root/.ssh /github/home/.ssh
-              touch /root/.ssh/known_hosts /github/home/.ssh/known_hosts
-
-              ssh-keygen -f "/root/.ssh/known_hosts" -R "[localhost]:10022" || true
-              ssh-keygen -f "/github/home/.ssh/known_hosts" -R "[localhost]:10022" || true
-
-              # (Opcional) Si quieres ser agresivo:
-              # rm -f /root/.ssh/known_hosts /github/home/.ssh/known_hosts
-              # touch /root/.ssh/known_hosts /github/home/.ssh/known_hosts
-
           - name: Run full test
-            env:
-              SSH_AUTH_SOCK: /tmp/ssh-sock/agent.sock
-              GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
             run: ./full-test.sh
 
           - name: Cleanup
             if: always()
-            run: ssh-add -D || true
+            run: rm -f /root/.ssh/id_ed25519
