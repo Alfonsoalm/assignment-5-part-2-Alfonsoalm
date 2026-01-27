@@ -12,11 +12,6 @@ jobs:
         container: cuaesd/aesd-autotest:24-assignment5-buildroot
         runs-on: self-hosted
 
-        container:
-          image: cuaesd/aesd-autotest:24-assignment5-buildroot
-          volumes:
-            - /tmp/ssh-sock:/tmp/ssh-sock
-
         steps:
           - uses: actions/checkout@v2
 
